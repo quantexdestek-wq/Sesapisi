@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantex Hackledi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Courier New', monospace;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .kuru-kafa {
+            font-size: 120px;
+            animation: float 2s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-25px); }
+        }
+
+        .glitch {
+            font-size: 70px;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 0 0 30px #ff0000;
+            animation: shake 0.1s infinite, flicker 0.2s infinite;
+            letter-spacing: 8px;
+            text-align: center;
+        }
+
+        .sub {
+            color: #aaa;
+            font-size: 16px;
+            margin-top: 10px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(2px, -2px); }
+            25% { transform: translate(-3px, 3px); }
+            50% { transform: translate(2px, 2px); }
+            75% { transform: translate(-2px, -3px); }
+            100% { transform: translate(3px, -2px); }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            55% { opacity: 0.3; }
+            60% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+
+        #panel {
+            display: none;
+            text-align: center;
+            color: #fff;
+            margin-top: 30px;
+        }
+
+        #panel p {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .butonlar {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-oynat {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .btn-oynat:hover {
+            background: #00cc00;
+            box-shadow: 0 0 30px #00ff00;
+            transform: scale(1.05);
+        }
+
+        .btn-indir {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .btn-indir:hover {
+            background: #cc0000;
+            box-shadow: 0 0 30px #ff0000;
+            transform: scale(1.05);
+        }
+
+        #durum {
+            color: #ffcc00;
+            margin-top: 20px;
+            font-size: 14px;
+            text-shadow: 0 0 5px #ffcc00;
+        }
+
+        /* Matrix arka plan */
+        .matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="matrix" id="matrix"></canvas>
+
+    <div id="anaGorunum">
+        <div class="kuru-kafa">💀</div>
+        <h1 class="glitch">QUANTEX HACKLEDI</h1>
+        <p class="sub">Sistem ele geçirildi...</p>
+    </div>
+
+    <div id="panel">
+        <p id="metinGoster"></p>
+        <div class="butonlar">
+            <button class="btn btn-oynat" onclick="oynat()">▶ Oynat</button>
+            <button class="btn btn-indir" onclick="indir()">⬇ İndir</button>
+        </div>
+        <p id="durum"></p>
+    </div>
+
+    <!-- Gizli ses -->
+    <audio id="audio" style="display:none;"></audio>
+
+    <script>
+        // ===== MATRIX YAĞMUR =====
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!?';
+        const charArray = chars.split('');
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        for (let i = 0; i < columns; i++) drops[i] = Math.random() * canvas.height;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                ctx.fillText(charArray[Math.floor(Math.random() * charArray.length)], i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // ===== SES API =====
+        const params = new URLSearchParams(window.location.search);
+        const metin = params.get('ses');
+
+        if (metin) {
+            // Ana görünümü gizle, paneli göster
+            document.getElementById('anaGorunum').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+            document.getElementById('metinGoster').innerHTML = '🎙️ <b>"' + metin + '"</b>';
+
+            const sesURL = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=tr&q=' + encodeURIComponent(metin);
+            const audio = document.getElementById('audio');
+            audio.src = sesURL;
+            audio.preload = 'auto';
+
+            let sesBlob = null;
+
+            fetch(sesURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    sesBlob = blob;
+                    document.getElementById('durum').innerHTML = '✅ Ses hazır!';
+                })
+                .catch(() => {
+                    document.getElementById('durum').innerHTML = '⚠️ Ses yüklenirken hata oluştu';
+                });
+
+            window.oynat = function() {
+                const durum = document.getElementById('durum');
+                audio.play().then(() => {
+                    durum.innerHTML = '🔊 Çalıyor...';
+                }).catch(() => {
+                    durum.innerHTML = '⚠️ Oynatılamadı, tekrar dene';
+                    audio.src = sesURL;
+                    audio.play();
+                });
+            };
+
+            window.indir = function() {
+                const durum = document.getElementById('durum');
+                if (sesBlob) {
+                    const url = URL.createObjectURL(sesBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = metin.replace(/\s+/g, '_') + '.mp3';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    durum.innerHTML = '⬇ İndiriliyor...';
+                } else {
+                    fetch(sesURL)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            sesBlob = blob;
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = metin.replace(/\s+/g, '_') + '.mp3';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            durum.innerHTML = '⬇ İndiriliyor...';
+                        })
+                        .catch(() => {
+                            durum.innerHTML = '❌ İndirme başarısız!';
+                        });
+                }
+            };
+        }
+    </script>
+</body>
+</html>
