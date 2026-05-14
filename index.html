@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantex Hackledi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Courier New', monospace;
+            flex-direction: column;
+        }
+
+        .glitch {
+            font-size: 100px;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 4px 4px 0 #000, -4px -4px 0 #000;
+            animation: shake 0.1s infinite, flicker 0.2s infinite;
+            letter-spacing: 10px;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(2px, -2px); }
+            25% { transform: translate(-3px, 3px); }
+            50% { transform: translate(2px, 2px); }
+            75% { transform: translate(-2px, -3px); }
+            100% { transform: translate(3px, -2px); }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            55% { opacity: 0.3; }
+            60% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+
+        #panel {
+            display: none;
+            text-align: center;
+            color: #fff;
+            margin-top: 30px;
+        }
+
+        #panel p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #00ff00;
+        }
+
+        .butonlar {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-oynat {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .btn-oynat:hover {
+            background: #00cc00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .btn-indir {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .btn-indir:hover {
+            background: #cc0000;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        #durum {
+            color: #ffcc00;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="glitch" id="yazi">HACKLENDIN</h1>
+
+    <div id="panel">
+        <p id="metinGoster"></p>
+        <div class="butonlar">
+            <button class="btn btn-oynat" onclick="oynat()">▶ Oynat</button>
+            <button class="btn btn-indir" onclick="indir()">⬇ İndir</button>
+        </div>
+        <p id="durum"></p>
+    </div>
+
+    <!-- Gizli ses -->
+    <audio id="audio" style="display:none;"></audio>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const metin = params.get('ses');
+
+        // Eğer ?ses= varsa
+        if (metin) {
+            // Hacklendin yazısını gizle, paneli göster
+            document.getElementById('yazi').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+            document.getElementById('metinGoster').innerHTML = '🎙️ <b>"' + metin + '"</b>';
+
+            // Google TTS URL
+            const sesURL = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=tr&q=' + encodeURIComponent(metin);
+
+            // Audio elementi
+            const audio = document.getElementById('audio');
+            audio.src = sesURL;
+            audio.preload = 'auto';
+
+            // Ses verisini indir ve blob olarak sakla
+            let sesBlob = null;
+
+            fetch(sesURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    sesBlob = blob;
+                    document.getElementById('durum').innerHTML = '✅ Ses hazır!';
+                })
+                .catch(() => {
+                    document.getElementById('durum').innerHTML = '⚠️ Ses yüklenirken hata oluştu';
+                });
+
+            // Oynat fonksiyonu
+            window.oynat = function() {
+                const durum = document.getElementById('durum');
+                
+                if (!audio.src) {
+                    audio.src = sesURL;
+                }
+                
+                audio.play().then(() => {
+                    durum.innerHTML = '🔊 Çalıyor...';
+                }).catch(() => {
+                    durum.innerHTML = '⚠️ Oynatılamadı, tekrar dene';
+                    audio.src = sesURL;
+                    audio.play();
+                });
+            };
+
+            // İndir fonksiyonu
+            window.indir = function() {
+                const durum = document.getElementById('durum');
+
+                if (sesBlob) {
+                    // Blob varsa direkt indir
+                    const url = URL.createObjectURL(sesBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = metin.replace(/\s+/g, '_') + '.mp3';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    durum.innerHTML = '⬇ İndiriliyor...';
+                } else {
+                    // Blob yoksa tekrar fetch et
+                    fetch(sesURL)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            sesBlob = blob;
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = metin.replace(/\s+/g, '_') + '.mp3';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            durum.innerHTML = '⬇ İndiriliyor...';
+                        })
+                        .catch(() => {
+                            durum.innerHTML = '❌ İndirme başarısız!';
+                        });
+                }
+            };
+        }
+    </script>
+</body>
+</html>
